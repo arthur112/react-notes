@@ -6,7 +6,7 @@ export function RootLayout() {
       <section className="mx-auto w-[min(100%,960px)]">
         <nav aria-label="Main navigation" className="mb-8 flex flex-wrap gap-2">
           <NavLink to="/">Todos</NavLink>
-          <NavLink to="/about">About</NavLink>
+          <NavLink to="/tasks">Tasks</NavLink>
         </nav>
         <Outlet />
       </section>
@@ -14,7 +14,7 @@ export function RootLayout() {
   );
 }
 
-function NavLink({ to, children }: { to: "/" | "/about"; children: string }) {
+function NavLink({ to, children }: { to: "/" | "/tasks"; children: string }) {
   return (
     <Link
       to={to}
