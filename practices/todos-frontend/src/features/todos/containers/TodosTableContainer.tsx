@@ -11,12 +11,12 @@ import { TodosDataTable } from "../ui/TodosDataTable";
 const PAGE_SIZE = 20;
 
 function Root({ children }: { children: ReactNode }) {
-  return <div className="grid gap-3.5">{children}</div>;
+  return <div className="grid gap-4">{children}</div>;
 }
 
 function Toolbar({ children }: { children: ReactNode }) {
   return (
-    <div className="grid items-center gap-3 min-[841px]:grid-cols-[minmax(220px,1fr)_auto]">
+    <div className="grid items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
       {children}
     </div>
   );
@@ -35,13 +35,13 @@ function Alerts({
     <>
       {queryError ? (
         <div
-          className="flex items-center justify-between gap-3 rounded-lg border border-(--danger-border) bg-(--danger-bg) px-3 py-2.5 text-sm text-(--danger)"
+          className="flex items-center justify-between gap-3 rounded-lg border border-(--danger-border) bg-(--danger-bg) px-3 py-2 text-sm text-(--danger)"
           role="alert"
         >
           <span>{queryError.message}</span>
           <button
             type="button"
-            className="inline-flex min-h-8.5 cursor-pointer items-center justify-center rounded-lg border border-(--border) bg-(--surface) px-3 text-sm font-[650] text-(--text-h) disabled:cursor-not-allowed disabled:opacity-[0.55]"
+            className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-(--border) bg-(--surface) px-3 text-sm font-medium text-(--text-h) disabled:cursor-not-allowed disabled:opacity-50"
             onClick={onRetry}
           >
             Retry
@@ -51,7 +51,7 @@ function Alerts({
 
       {mutationError ? (
         <p
-          className="m-0 flex items-center justify-between gap-3 rounded-lg border border-(--danger-border) bg-(--danger-bg) px-3 py-2.5 text-sm text-(--danger)"
+          className="m-0 rounded-lg border border-(--danger-border) bg-(--danger-bg) px-3 py-2 text-sm text-(--danger)"
           role="alert"
         >
           {mutationError.message}

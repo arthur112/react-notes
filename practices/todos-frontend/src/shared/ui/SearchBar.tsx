@@ -12,10 +12,10 @@ type SearchBarProps = Omit<
 };
 
 const searchBarClassName =
-  "flex min-h-10.5 min-w-0 items-center gap-2.5 rounded-lg border border-(--border) bg-(--surface) px-3.5";
+  "flex h-9 min-w-0 items-center gap-2 rounded-md border border-(--border) bg-(--surface) px-3 focus-within:border-(--accent-border) focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-(--accent)";
 
 const searchInputClassName =
-  "min-w-0 w-full border-0 bg-transparent text-[15px] text-(--text-h) outline-0 [font:inherit]";
+  "min-w-0 w-full border-0 bg-transparent text-sm text-(--text-h) outline-none placeholder:text-(--text-muted)";
 
 function cx(...classNames: Array<string | undefined>): string {
   return classNames.filter(Boolean).join(" ");

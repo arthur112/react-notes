@@ -101,11 +101,11 @@ export function DataTable<TData extends RowData>({
   return (
     <div
       className={cx(
-        "w-[min(100%,1040px)] overflow-x-auto rounded-lg border border-(--border) bg-(--surface)",
+        "w-full overflow-x-auto rounded-lg border border-(--border) bg-(--surface) text-(--text-h)",
         className,
       )}
     >
-      <table className="w-full border-collapse text-left">
+      <table className="w-full border-collapse text-left text-sm">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -118,7 +118,7 @@ export function DataTable<TData extends RowData>({
                     key={header.id}
                     aria-sort={getAriaSort(sortDirection)}
                     className={cx(
-                      "border-b border-(--border) px-4.5 py-3.5 align-middle text-[13px] font-[650] uppercase text-(--text-muted)",
+                      "border-b border-(--border) px-4 py-3 align-middle text-xs font-semibold uppercase text-(--text-muted)",
                       meta.headerClassName ?? "text-left",
                     )}
                     style={{ width: header.getSize() }}
@@ -126,7 +126,7 @@ export function DataTable<TData extends RowData>({
                     {header.isPlaceholder ? null : header.column.getCanSort() ? (
                       <button
                         type="button"
-                        className="inline-flex min-h-7 cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-inherit [font:inherit] [text-transform:inherit] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--accent)"
+                        className="inline-flex h-7 cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-inherit focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent)"
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         <span>
@@ -155,7 +155,7 @@ export function DataTable<TData extends RowData>({
           {isLoading ? (
             <tr className="last:[&>td]:border-b-0">
               <td
-                className="border-b border-(--border) px-4.5 py-3.5 text-center align-middle text-[15px] text-(--text-muted)"
+                className="border-b border-(--border) px-4 py-6 text-center align-middle text-(--text-muted)"
                 colSpan={columnCount}
               >
                 {loadingMessage}
@@ -166,7 +166,7 @@ export function DataTable<TData extends RowData>({
           {!isLoading && table.getRowModel().rows.length === 0 ? (
             <tr className="last:[&>td]:border-b-0">
               <td
-                className="border-b border-(--border) px-4.5 py-3.5 text-center align-middle text-[15px] text-(--text-muted)"
+                className="border-b border-(--border) px-4 py-6 text-center align-middle text-(--text-muted)"
                 colSpan={columnCount}
               >
                 {emptyMessage}
@@ -183,7 +183,7 @@ export function DataTable<TData extends RowData>({
                   <td
                     key={cell.id}
                     className={cx(
-                      "border-b border-(--border) px-4.5 py-3.5 align-middle text-[15px] text-(--text-h)",
+                      "border-b border-(--border) px-4 py-3 align-middle text-(--text-h)",
                       meta.cellClassName,
                     )}
                   >

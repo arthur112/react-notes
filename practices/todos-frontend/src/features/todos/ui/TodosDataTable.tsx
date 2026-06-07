@@ -67,7 +67,7 @@ export function TodosDataTable({
           return (
             <button
               type="button"
-              className="inline-flex min-h-8.5 w-full cursor-pointer items-center justify-center rounded-lg border border-(--border) bg-(--surface) px-3 text-sm font-[650] text-(--danger) disabled:cursor-not-allowed disabled:opacity-[0.55] min-[561px]:w-auto"
+              className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-(--border) bg-(--surface) px-3 text-sm font-medium text-(--danger) disabled:cursor-not-allowed disabled:opacity-50"
               disabled={isDeleting}
               onClick={() => onDeleteTodo(row.original.id)}
             >
