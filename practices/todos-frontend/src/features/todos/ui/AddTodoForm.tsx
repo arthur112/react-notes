@@ -1,8 +1,16 @@
 import { useState, type FormEvent } from "react";
+import { Plus } from "lucide-react";
+import {
+  todoTypeLabels,
+  todoTypes,
+  type TodoType,
+} from "../types/todoTypes";
 
 export type AddTodoFormValues = {
+  completedDate: string | null;
   date: string;
   name: string;
+  type: TodoType;
 };
 
 export type AddTodoFormSubmitHelpers = {
@@ -27,10 +35,14 @@ function getTodayInputValue(): string {
 export function AddTodoForm({ isSubmitting, onSubmit }: AddTodoFormProps) {
   const [todoName, setTodoName] = useState("");
   const [todoDate, setTodoDate] = useState(getTodayInputValue);
+  const [todoType, setTodoType] = useState<TodoType>("feature");
+  const [todoCompletedDate, setTodoCompletedDate] = useState("");
 
   function resetForm() {
     setTodoName("");
     setTodoDate(getTodayInputValue());
+    setTodoType("feature");
+    setTodoCompletedDate("");
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -44,8 +56,10 @@ export function AddTodoForm({ isSubmitting, onSubmit }: AddTodoFormProps) {
 
     onSubmit(
       {
+        completedDate: todoCompletedDate || null,
         name,
         date: todoDate || getTodayInputValue(),
+        type: todoType,
       },
       { reset: resetForm },
     );
@@ -53,30 +67,62 @@ export function AddTodoForm({ isSubmitting, onSubmit }: AddTodoFormProps) {
 
   return (
     <form
-      className="grid min-w-0 gap-2 md:flex md:items-center"
+      className="grid min-w-0 gap-2 md:grid-cols-[minmax(180px,1fr)_150px_150px_150px_auto]"
       onSubmit={handleSubmit}
     >
+      <label className="sr-only" htmlFor="todo-name">
+        New todo
+      </label>
       <input
+        id="todo-name"
         type="text"
-        className={`${inputClassName} w-full md:w-56`}
+        className={inputClassName}
         value={todoName}
         onChange={(event) => setTodoName(event.target.value)}
         placeholder="New todo"
-        aria-label="New todo"
       />
+      <label className="sr-only" htmlFor="todo-date">
+        Todo date
+      </label>
       <input
+        id="todo-date"
         type="date"
-        className={`${inputClassName} w-full md:w-40`}
+        className={inputClassName}
         value={todoDate}
         onChange={(event) => setTodoDate(event.target.value)}
-        aria-label="Todo date"
+      />
+      <label className="sr-only" htmlFor="todo-type">
+        Todo type
+      </label>
+      <select
+        id="todo-type"
+        className={inputClassName}
+        value={todoType}
+        onChange={(event) => setTodoType(event.target.value as TodoType)}
+      >
+        {todoTypes.map((type) => (
+          <option key={type} value={type}>
+            {todoTypeLabels[type]}
+          </option>
+        ))}
+      </select>
+      <label className="sr-only" htmlFor="todo-completed-date">
+        Completed date
+      </label>
+      <input
+        id="todo-completed-date"
+        type="date"
+        className={inputClassName}
+        value={todoCompletedDate}
+        onChange={(event) => setTodoCompletedDate(event.target.value)}
       />
       <button
         type="submit"
         className="inline-flex h-9 w-full cursor-pointer items-center justify-center rounded-md border border-(--accent-border) bg-(--accent-bg) px-3 text-sm font-medium text-(--accent) disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
         disabled={isSubmitting || !todoName.trim()}
       >
-        {isSubmitting ? "Adding..." : "Add"}
+        <Plus className="size-4" />
+        <span className="ml-2">{isSubmitting ? "Adding" : "Add todo"}</span>
       </button>
     </form>
   );

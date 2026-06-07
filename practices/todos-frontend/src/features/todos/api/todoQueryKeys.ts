@@ -1,7 +1,12 @@
+import type { TodoType } from "../types/todoTypes";
+
 export type TodoListQueryKeyParams = {
-  search: string;
+  completedDateFrom: string;
+  completedDateTo: string;
   page: number;
   pageSize: number;
+  search: string;
+  types: TodoType[];
 };
 
 export const todoQueryKeys = {
