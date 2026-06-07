@@ -10,10 +10,11 @@ import { useGetTodos } from "../api/useGetTodos";
 import {
   todoTypeLabels,
   todoTypes,
+  type Todo,
   type TodoType,
 } from "../types/todoTypes";
 import { AddTodoForm, type AddTodoFormSubmitHelpers } from "../ui/AddTodoForm";
-import { TodosDataTable } from "../ui/TodosDataTable";
+import { TodoDetailsPanel, TodosDataTable } from "../ui/TodosDataTable";
 
 const PAGE_SIZE = 20;
 
@@ -86,6 +87,7 @@ export function TodosTableContainer() {
   const [typeFilters, setTypeFilters] = useState<TodoType[]>([]);
   const [completedDateFrom, setCompletedDateFrom] = useState("");
   const [completedDateTo, setCompletedDateTo] = useState("");
+  const [selectedTodoId, setSelectedTodoId] = useState<Todo["id"] | null>(null);
   const debouncedSearch = useDebounce(search, 300);
   const hasActiveFilters =
     search.trim().length > 0 ||
@@ -103,6 +105,10 @@ export function TodosTableContainer() {
   const createTodoMutation = useCreateTodo();
   const deleteTodoMutation = useDeleteTodo();
   const todos = todosQuery.data?.todos ?? [];
+  const selectedTodo =
+    selectedTodoId === null
+      ? null
+      : (todos.find((todo) => todo.id === selectedTodoId) ?? null);
   const deletingTodoId = deleteTodoMutation.isPending
     ? deleteTodoMutation.variables
     : undefined;
@@ -111,21 +117,25 @@ export function TodosTableContainer() {
   function handleSearchChange(value: string) {
     setSearch(value);
     setPage(1);
+    setSelectedTodoId(null);
   }
 
   function handleTypeFiltersChange(values: TodoType[]) {
     setTypeFilters(values);
     setPage(1);
+    setSelectedTodoId(null);
   }
 
   function handleCompletedDateFromChange(value: string) {
     setCompletedDateFrom(value);
     setPage(1);
+    setSelectedTodoId(null);
   }
 
   function handleCompletedDateToChange(value: string) {
     setCompletedDateTo(value);
     setPage(1);
+    setSelectedTodoId(null);
   }
 
   function handleClearFilters() {
@@ -134,6 +144,7 @@ export function TodosTableContainer() {
     setCompletedDateFrom("");
     setCompletedDateTo("");
     setPage(1);
+    setSelectedTodoId(null);
   }
 
   function handleAddTodo(
@@ -143,6 +154,24 @@ export function TodosTableContainer() {
     createTodoMutation.mutate(values, {
       onSuccess: helpers.reset,
     });
+  }
+
+  function handleTodoRowClick(todoId: Todo["id"]) {
+    setSelectedTodoId((currentTodoId) =>
+      currentTodoId === todoId ? null : todoId,
+    );
+  }
+
+  function handleDeleteTodo(todoId: Todo["id"]) {
+    setSelectedTodoId((currentTodoId) =>
+      currentTodoId === todoId ? null : currentTodoId,
+    );
+    deleteTodoMutation.mutate(todoId);
+  }
+
+  function handlePageChange(nextPage: number) {
+    setPage(nextPage);
+    setSelectedTodoId(null);
   }
 
   return (
@@ -227,8 +256,12 @@ export function TodosTableContainer() {
         isLoading={todosQuery.isLoading}
         hasActiveFilters={hasActiveFilters}
         deletingTodoId={deletingTodoId}
-        onDeleteTodo={deleteTodoMutation.mutate}
+        onDeleteTodo={handleDeleteTodo}
+        onTodoRowClick={handleTodoRowClick}
+        selectedTodoId={selectedTodoId}
       />
+
+      <TodoDetailsPanel todo={selectedTodo} />
 
       <Pagination
         ariaLabel="Todos pagination"
@@ -236,7 +269,7 @@ export function TodosTableContainer() {
         page={page}
         pageSize={PAGE_SIZE}
         total={todosQuery.data?.total}
-        onPageChange={setPage}
+        onPageChange={handlePageChange}
       />
     </TodosTable.root>
   );

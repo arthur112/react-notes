@@ -1,4 +1,9 @@
-import { useState, type ReactNode } from "react";
+import {
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -20,9 +25,12 @@ export type DataTableProps<TData extends RowData> = {
   columns: ColumnDef<TData>[];
   data: TData[];
   emptyMessage?: ReactNode;
+  getRowId?: (row: TData) => number | string;
+  isRowSelected?: (row: TData) => boolean;
   isLoading?: boolean;
   loadingMessage?: ReactNode;
   manualSorting?: boolean;
+  onRowClick?: (row: TData) => void;
   onSortingChange?: OnChangeFn<SortingState>;
   sorting?: SortingState;
 };
@@ -61,14 +69,29 @@ function getAriaSort(
   return undefined;
 }
 
+function isInteractiveElement(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  return Boolean(
+    target.closest(
+      "a, button, input, select, textarea, [role='button'], [role='link']",
+    ),
+  );
+}
+
 export function DataTable<TData extends RowData>({
   className,
   columns,
   data,
   emptyMessage = "No records found.",
+  getRowId,
+  isRowSelected,
   isLoading = false,
   loadingMessage = "Loading...",
   manualSorting = false,
+  onRowClick,
   onSortingChange,
   sorting,
 }: DataTableProps<TData>) {
@@ -82,6 +105,28 @@ export function DataTable<TData extends RowData>({
 
     onSortingChange?.(updater);
   };
+
+  function handleRowClick(event: MouseEvent<HTMLTableRowElement>, row: TData) {
+    if (!onRowClick || isInteractiveElement(event.target)) {
+      return;
+    }
+
+    onRowClick(row);
+  }
+
+  function handleRowKeyDown(
+    event: KeyboardEvent<HTMLTableRowElement>,
+    row: TData,
+  ) {
+    if (!onRowClick || isInteractiveElement(event.target)) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onRowClick(row);
+    }
+  }
 
   // TanStack Table returns imperative helpers that React Compiler cannot memoize.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -174,25 +219,53 @@ export function DataTable<TData extends RowData>({
             </tr>
           ) : null}
 
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="last:[&>td]:border-b-0">
-              {row.getVisibleCells().map((cell) => {
-                const meta = getColumnMeta(cell.column.columnDef.meta);
+          {table.getRowModel().rows.map((row) => {
+            const rowData = row.original;
+            const rowKey = String(getRowId?.(rowData) ?? row.id);
+            const selected = isRowSelected?.(rowData) ?? false;
 
-                return (
-                  <td
-                    key={cell.id}
-                    className={cx(
-                      "border-b border-(--border) px-4 py-3 align-middle text-(--text-h)",
-                      meta.cellClassName,
-                    )}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
+            return (
+              <tr
+                key={rowKey}
+                aria-selected={selected || undefined}
+                className={cx(
+                  "last:[&>td]:border-b-0",
+                  onRowClick
+                    ? "cursor-pointer transition-colors hover:bg-(--accent-bg) focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-(--accent-border)"
+                    : undefined,
+                  selected ? "bg-(--accent-bg)" : undefined,
+                )}
+                data-state={selected ? "selected" : undefined}
+                onClick={
+                  onRowClick
+                    ? (event) => handleRowClick(event, rowData)
+                    : undefined
+                }
+                onKeyDown={
+                  onRowClick
+                    ? (event) => handleRowKeyDown(event, rowData)
+                    : undefined
+                }
+                tabIndex={onRowClick ? 0 : undefined}
+              >
+                {row.getVisibleCells().map((cell) => {
+                  const meta = getColumnMeta(cell.column.columnDef.meta);
+
+                  return (
+                    <td
+                      key={cell.id}
+                      className={cx(
+                        "border-b border-(--border) px-4 py-3 align-middle text-(--text-h)",
+                        meta.cellClassName,
+                      )}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

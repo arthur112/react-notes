@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable, type DataTableColumnMeta } from "@ui/DataTable";
 import { todoTypeLabels, type Todo, type TodoType } from "../types/todoTypes";
@@ -14,6 +14,8 @@ type TodosDataTableProps = {
   hasActiveFilters: boolean;
   isLoading: boolean;
   onDeleteTodo: (todoId: Todo["id"]) => void;
+  onTodoRowClick: (todoId: Todo["id"]) => void;
+  selectedTodoId: Todo["id"] | null;
   todos: Todo[];
 };
 
@@ -47,11 +49,72 @@ function TodoTypeBadge({ type }: { type: TodoType }) {
   );
 }
 
+function TodoDetailItem({
+  children,
+  label,
+}: {
+  children: ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="grid min-w-0 gap-1">
+      <dt className="text-xs font-semibold text-(--text-muted) uppercase">
+        {label}
+      </dt>
+      <dd className="m-0 min-w-0 text-sm leading-6 break-words text-(--text-h)">
+        {children}
+      </dd>
+    </div>
+  );
+}
+
+export function TodoDetailsPanel({ todo }: { todo: Todo | null }) {
+  if (!todo) {
+    return null;
+  }
+
+  const description = todo.description?.trim();
+  const completedDate = todo.completedDate
+    ? formatDate(todo.completedDate)
+    : null;
+
+  return (
+    <section
+      className="grid gap-4 rounded-lg border border-(--border) bg-(--surface) p-4 text-(--text-h)"
+      aria-label="Selected todo details"
+    >
+      <div className="grid gap-2">
+        <h2 className="m-0 text-xl leading-tight">{todo.name}</h2>
+        <TodoTypeBadge type={todo.type} />
+      </div>
+
+      <dl className="grid gap-4">
+        <TodoDetailItem label="ID">{todo.id}</TodoDetailItem>
+        <TodoDetailItem label="Date">{formatDate(todo.date)}</TodoDetailItem>
+        <TodoDetailItem label="Completed">
+          {completedDate ? (
+            completedDate
+          ) : (
+            <span className="text-(--text-muted)">Open</span>
+          )}
+        </TodoDetailItem>
+        <TodoDetailItem label="Description">
+          <span className="whitespace-pre-wrap">
+            {description || "No description provided."}
+          </span>
+        </TodoDetailItem>
+      </dl>
+    </section>
+  );
+}
+
 export function TodosDataTable({
   deletingTodoId,
   hasActiveFilters,
   isLoading,
   onDeleteTodo,
+  onTodoRowClick,
+  selectedTodoId,
   todos,
 }: TodosDataTableProps) {
   const columns = useMemo<ColumnDef<Todo>[]>(
@@ -112,7 +175,10 @@ export function TodosDataTable({
               type="button"
               className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-(--border) bg-(--surface) px-3 text-sm font-medium text-(--danger) disabled:cursor-not-allowed disabled:opacity-50"
               disabled={isDeleting}
-              onClick={() => onDeleteTodo(row.original.id)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDeleteTodo(row.original.id);
+              }}
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </button>
@@ -130,8 +196,11 @@ export function TodosDataTable({
       emptyMessage={
         hasActiveFilters ? "No todos match your filters." : "No todos yet."
       }
+      getRowId={(todo) => todo.id}
+      isRowSelected={(todo) => todo.id === selectedTodoId}
       isLoading={isLoading}
       loadingMessage="Loading todos..."
+      onRowClick={(todo) => onTodoRowClick(todo.id)}
     />
   );
 }

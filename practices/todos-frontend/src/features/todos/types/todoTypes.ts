@@ -16,6 +16,7 @@ export const todoTypeLabels: Record<TodoType, string> = {
 
 export type Todo = {
   completedDate: string | null;
+  description: string | null;
   id: number;
   name: string;
   date: string;
