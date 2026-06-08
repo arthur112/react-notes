@@ -10,9 +10,9 @@ import {
   todoQueryKeys,
   type TodoListQueryKeyParams,
 } from "./todoQueryKeys";
-import { todoTypes, type Todo, type TodoType } from "../types/todoTypes";
+import type { Todo } from "../types/todoModels";
 
-export type { Todo } from "../types/todoTypes";
+export type { Todo } from "../types/todoModels";
 
 export type TodosResult = {
   todos: Todo[];
@@ -22,10 +22,11 @@ export type TodosResult = {
 export type GetTodosQueryParams = {
   completedDateFrom?: string;
   completedDateTo?: string;
+  knownTypes?: string[];
   page?: number;
   pageSize?: number;
   search?: string;
-  types?: TodoType[];
+  types?: string[];
 };
 
 type TodosApiResponse =
@@ -39,10 +40,11 @@ const normalizeParams = (
 ): TodoListQueryKeyParams => ({
   completedDateFrom: params.completedDateFrom ?? "",
   completedDateTo: params.completedDateTo ?? "",
+  knownTypes: params.knownTypes ?? [],
   page: params.page ?? 1,
   pageSize: params.pageSize ?? 50,
   search: params.search ?? "",
-  types: todoTypes.filter((type) => params.types?.includes(type)),
+  types: params.types ?? [],
 });
 
 function buildTodosQuery(params: TodoListQueryKeyParams): IGridifyQuery {
@@ -72,10 +74,14 @@ function buildTodosQuery(params: TodoListQueryKeyParams): IGridifyQuery {
         builder.or().addCondition("id", ConditionalOperator.Equal, todoId);
       }
 
-      if (todoTypes.includes(search.toLowerCase() as TodoType)) {
+      const matchingType = params.knownTypes.find(
+        (type) => type.toLowerCase() === search.toLowerCase(),
+      );
+
+      if (matchingType) {
         builder
           .or()
-          .addCondition("type", ConditionalOperator.Equal, search.toLowerCase());
+          .addCondition("type", ConditionalOperator.Equal, matchingType);
       }
 
       builder.endGroup();

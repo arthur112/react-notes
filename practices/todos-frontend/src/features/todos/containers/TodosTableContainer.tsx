@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { MultiSelect, type MultiSelectOption } from "@ui/MultiSelect";
 import { Pagination } from "@ui/Pagination";
@@ -6,24 +6,19 @@ import { SearchBar } from "@ui/SearchBar";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import { useCreateTodo, type CreateTodoInput } from "../api/useCreateTodo";
 import { useDeleteTodo } from "../api/useDeleteTodo";
+import { useGetTodoTypes } from "../api/useGetTodoTypes";
 import { useGetTodos } from "../api/useGetTodos";
 import {
-  todoTypeLabels,
-  todoTypes,
+  formatTodoTypeLabel,
   type Todo,
   type TodoType,
-} from "../types/todoTypes";
+} from "../types/todoModels";
 import { AddTodoForm, type AddTodoFormSubmitHelpers } from "../ui/AddTodoForm";
 import { TodoDetailsPanel, TodosDataTable } from "../ui/TodosDataTable";
 
 const PAGE_SIZE = 20;
 
-const todoTypeOptions: Array<MultiSelectOption<TodoType>> = todoTypes.map(
-  (type) => ({
-    label: todoTypeLabels[type],
-    value: type,
-  }),
-);
+const EMPTY_TODO_TYPES: TodoType[] = [];
 
 const filterInputClassName =
   "h-9 w-full min-w-0 rounded-md border border-(--border) bg-(--surface) px-3 text-sm text-(--text-h) outline-none focus-visible:border-(--accent-border) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent)";
@@ -89,18 +84,34 @@ export function TodosTableContainer() {
   const [completedDateTo, setCompletedDateTo] = useState("");
   const [selectedTodoId, setSelectedTodoId] = useState<Todo["id"] | null>(null);
   const debouncedSearch = useDebounce(search, 300);
+  const typeMetadataQuery = useGetTodoTypes();
+  const availableTypes = typeMetadataQuery.data ?? EMPTY_TODO_TYPES;
+  const availableTypeSet = useMemo(() => new Set(availableTypes), [availableTypes]);
+  const todoTypeOptions = useMemo<Array<MultiSelectOption<TodoType>>>(
+    () =>
+      availableTypes.map((type) => ({
+        label: formatTodoTypeLabel(type),
+        value: type,
+      })),
+    [availableTypes],
+  );
+  const activeTypeFilters = useMemo(
+    () => typeFilters.filter((type) => availableTypeSet.has(type)),
+    [availableTypeSet, typeFilters],
+  );
   const hasActiveFilters =
     search.trim().length > 0 ||
-    typeFilters.length > 0 ||
+    activeTypeFilters.length > 0 ||
     completedDateFrom.length > 0 ||
     completedDateTo.length > 0;
   const todosQuery = useGetTodos({
     completedDateFrom,
     completedDateTo,
+    knownTypes: availableTypes,
     page,
     pageSize: PAGE_SIZE,
     search: debouncedSearch,
-    types: typeFilters,
+    types: activeTypeFilters,
   });
   const createTodoMutation = useCreateTodo();
   const deleteTodoMutation = useDeleteTodo();
@@ -113,6 +124,7 @@ export function TodosTableContainer() {
     ? deleteTodoMutation.variables
     : undefined;
   const mutationError = createTodoMutation.error ?? deleteTodoMutation.error;
+  const queryError = todosQuery.error ?? typeMetadataQuery.error;
 
   function handleSearchChange(value: string) {
     setSearch(value);
@@ -185,11 +197,18 @@ export function TodosTableContainer() {
             placeholder="Search todos"
           />
           <MultiSelect
+            disabled={typeMetadataQuery.isLoading || todoTypeOptions.length === 0}
             label="Filter by type"
-            values={typeFilters}
+            values={activeTypeFilters}
             onValuesChange={handleTypeFiltersChange}
             options={todoTypeOptions}
-            placeholder="All types"
+            placeholder={
+              typeMetadataQuery.isLoading
+                ? "Loading types"
+                : typeMetadataQuery.error
+                  ? "Types unavailable"
+                  : "All types"
+            }
           />
           <div
             className="grid gap-2 sm:grid-cols-2"
@@ -239,15 +258,18 @@ export function TodosTableContainer() {
         </div>
         <AddTodoForm
           isSubmitting={createTodoMutation.isPending}
+          isTodoTypesLoading={typeMetadataQuery.isLoading}
           onSubmit={handleAddTodo}
+          todoTypeOptions={todoTypeOptions}
         />
       </TodosTable.toolbar>
 
       <TodosTable.alerts
-        queryError={todosQuery.error}
+        queryError={queryError}
         mutationError={mutationError}
         onRetry={() => {
           void todosQuery.refetch();
+          void typeMetadataQuery.refetch();
         }}
       />
 

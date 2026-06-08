@@ -8,6 +8,7 @@ export type MultiSelectOption<TValue extends string> = {
 
 type MultiSelectProps<TValue extends string> = {
   className?: string;
+  disabled?: boolean;
   label: string;
   onValuesChange: (values: TValue[]) => void;
   options: Array<MultiSelectOption<TValue>>;
@@ -21,6 +22,7 @@ function cx(...classNames: Array<string | false | undefined>): string {
 
 export function MultiSelect<TValue extends string>({
   className,
+  disabled = false,
   label,
   onValuesChange,
   options,
@@ -90,10 +92,11 @@ export function MultiSelect<TValue extends string>({
       </span>
       <button
         type="button"
-        className="inline-flex h-9 w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-md border border-(--border) bg-(--surface) px-3 text-left text-sm text-(--text-h) outline-none focus-visible:border-(--accent-border) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent)"
+        className="inline-flex h-9 w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-md border border-(--border) bg-(--surface) px-3 text-left text-sm text-(--text-h) outline-none disabled:cursor-not-allowed disabled:opacity-60 focus-visible:border-(--accent-border) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent)"
+        disabled={disabled}
         aria-labelledby={labelId}
         aria-haspopup="listbox"
-        aria-expanded={isOpen}
+        aria-expanded={!disabled && isOpen}
         onClick={() => setIsOpen((current) => !current)}
       >
         <span
@@ -107,7 +110,7 @@ export function MultiSelect<TValue extends string>({
         <ChevronDown className="size-4 shrink-0 text-(--text-muted)" />
       </button>
 
-      {isOpen ? (
+      {isOpen && !disabled ? (
         <div
           className="absolute left-0 top-[calc(100%+0.25rem)] z-20 grid max-h-64 w-full min-w-52 gap-1 overflow-auto rounded-md border border-(--border) bg-(--surface) p-1 shadow-lg"
           role="listbox"

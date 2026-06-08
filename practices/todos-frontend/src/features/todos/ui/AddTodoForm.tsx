@@ -1,10 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Plus } from "lucide-react";
-import {
-  todoTypeLabels,
-  todoTypes,
-  type TodoType,
-} from "../types/todoTypes";
+import type { MultiSelectOption } from "@ui/MultiSelect";
+import type { TodoType } from "../types/todoModels";
 
 export type AddTodoFormValues = {
   completedDate: string | null;
@@ -19,10 +16,12 @@ export type AddTodoFormSubmitHelpers = {
 
 type AddTodoFormProps = {
   isSubmitting: boolean;
+  isTodoTypesLoading: boolean;
   onSubmit: (
     values: AddTodoFormValues,
     helpers: AddTodoFormSubmitHelpers,
   ) => void;
+  todoTypeOptions: Array<MultiSelectOption<TodoType>>;
 };
 
 const inputClassName =
@@ -32,16 +31,27 @@ function getTodayInputValue(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function AddTodoForm({ isSubmitting, onSubmit }: AddTodoFormProps) {
+export function AddTodoForm({
+  isSubmitting,
+  isTodoTypesLoading,
+  onSubmit,
+  todoTypeOptions,
+}: AddTodoFormProps) {
   const [todoName, setTodoName] = useState("");
   const [todoDate, setTodoDate] = useState(getTodayInputValue);
-  const [todoType, setTodoType] = useState<TodoType>("feature");
+  const [todoType, setTodoType] = useState<TodoType>("");
   const [todoCompletedDate, setTodoCompletedDate] = useState("");
+  const defaultTodoType = todoTypeOptions[0]?.value ?? "";
+  const selectedTodoType = todoTypeOptions.some(
+    (option) => option.value === todoType,
+  )
+    ? todoType
+    : defaultTodoType;
 
   function resetForm() {
     setTodoName("");
     setTodoDate(getTodayInputValue());
-    setTodoType("feature");
+    setTodoType("");
     setTodoCompletedDate("");
   }
 
@@ -50,7 +60,7 @@ export function AddTodoForm({ isSubmitting, onSubmit }: AddTodoFormProps) {
 
     const name = todoName.trim();
 
-    if (!name) {
+    if (!name || !selectedTodoType) {
       return;
     }
 
@@ -59,7 +69,7 @@ export function AddTodoForm({ isSubmitting, onSubmit }: AddTodoFormProps) {
         completedDate: todoCompletedDate || null,
         name,
         date: todoDate || getTodayInputValue(),
-        type: todoType,
+        type: selectedTodoType,
       },
       { reset: resetForm },
     );
@@ -97,12 +107,18 @@ export function AddTodoForm({ isSubmitting, onSubmit }: AddTodoFormProps) {
       <select
         id="todo-type"
         className={inputClassName}
-        value={todoType}
-        onChange={(event) => setTodoType(event.target.value as TodoType)}
+        value={selectedTodoType}
+        disabled={isTodoTypesLoading || todoTypeOptions.length === 0}
+        onChange={(event) => setTodoType(event.target.value)}
       >
-        {todoTypes.map((type) => (
-          <option key={type} value={type}>
-            {todoTypeLabels[type]}
+        {todoTypeOptions.length === 0 ? (
+          <option value="">
+            {isTodoTypesLoading ? "Loading types" : "No types available"}
+          </option>
+        ) : null}
+        {todoTypeOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>
@@ -119,7 +135,7 @@ export function AddTodoForm({ isSubmitting, onSubmit }: AddTodoFormProps) {
       <button
         type="submit"
         className="inline-flex h-9 w-full cursor-pointer items-center justify-center rounded-md border border-(--accent-border) bg-(--accent-bg) px-3 text-sm font-medium text-(--accent) disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
-        disabled={isSubmitting || !todoName.trim()}
+        disabled={isSubmitting || !todoName.trim() || !selectedTodoType}
       >
         <Plus className="size-4" />
         <span className="ml-2">{isSubmitting ? "Adding" : "Add todo"}</span>

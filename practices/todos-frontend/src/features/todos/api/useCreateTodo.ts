@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@api/apiClient";
 import { todoQueryKeys } from "./todoQueryKeys";
-import type { Todo, TodoType } from "../types/todoTypes";
+import type { Todo, TodoType } from "../types/todoModels";
 
-export type { Todo } from "../types/todoTypes";
+export type { Todo } from "../types/todoModels";
 
 export type CreateTodoInput = {
   completedDate: string | null;

@@ -1,7 +1,11 @@
 import { useMemo, type ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable, type DataTableColumnMeta } from "@ui/DataTable";
-import { todoTypeLabels, type Todo, type TodoType } from "../types/todoTypes";
+import {
+  formatTodoTypeLabel,
+  type Todo,
+  type TodoType,
+} from "../types/todoModels";
 
 const dateFormatter = new Intl.DateTimeFormat("en", {
   month: "short",
@@ -19,15 +23,13 @@ type TodosDataTableProps = {
   todos: Todo[];
 };
 
-const todoTypeClassNames: Record<TodoType, string> = {
-  feature:
-    "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300",
-  bug: "border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300",
-  chore:
-    "border-zinc-300 bg-zinc-50 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300",
-  documentation:
-    "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
-};
+const todoTypeBadgeClassNames = [
+  "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300",
+  "border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-300",
+  "border-zinc-300 bg-zinc-50 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300",
+  "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+  "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+];
 
 function formatDate(value: string): string {
   const date = new Date(`${value}T00:00:00`);
@@ -39,12 +41,20 @@ function formatDate(value: string): string {
   return dateFormatter.format(date);
 }
 
+function getTodoTypeBadgeClassName(type: TodoType): string {
+  const colorIndex =
+    Array.from(type).reduce((total, character) => total + character.charCodeAt(0), 0) %
+    todoTypeBadgeClassNames.length;
+
+  return todoTypeBadgeClassNames[colorIndex] ?? todoTypeBadgeClassNames[0];
+}
+
 function TodoTypeBadge({ type }: { type: TodoType }) {
   return (
     <span
-      className={`inline-flex h-6 items-center rounded-md border px-2 text-xs font-medium ${todoTypeClassNames[type]}`}
+      className={`inline-flex h-6 items-center rounded-md border px-2 text-xs font-medium ${getTodoTypeBadgeClassName(type)}`}
     >
-      {todoTypeLabels[type]}
+      {formatTodoTypeLabel(type)}
     </span>
   );
 }
